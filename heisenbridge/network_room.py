@@ -2,7 +2,6 @@ import asyncio
 import hashlib
 import logging
 import re
-import shlex
 import ssl
 from argparse import Namespace
 from base64 import b32encode
@@ -880,18 +879,9 @@ class NetworkRoom(Room):
 
             if self.autocmd is not None:
                 self.send_notice("Executing autocmd and waiting a bit before joining channels...")
-
-                for command in self.autocmd.split(";"):
-                    args = shlex.split(command)
-
-                    if len(args) == 0:
-                        continue
-
-                    if args[0].upper() in ["RAW", "MSG", "NICKSERV", "NS", "CHANSERV", "CS", "UMODE", "WAIT"]:
-                        await self.commands.trigger(command)
-                    else:
-                        self.send_notice(f"Warning: Ignoring unsupported autocmd command: '{command}'")
-
+                await self.commands.trigger(
+                    self.autocmd, allowed=["RAW", "MSG", "NICKSERV", "NS", "CHANSERV", "CS", "UMODE", "WAIT"]
+                )
                 await asyncio.sleep(4)
 
             channels = []
